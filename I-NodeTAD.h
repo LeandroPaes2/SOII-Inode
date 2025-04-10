@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <ctype.h>
+#include <conio2.h>
 
 using namespace std;
 
@@ -218,7 +219,7 @@ void pushListaBlocoLivre(Disco disco[], int endereco)
     int enderecoBlocoAtual = ENDERECO_CABECA_LISTA;
     int enderecoProxBloco = disco[ENDERECO_CABECA_LISTA].lbl.enderecoBlocoProx;
 
-    while (isEnderecoValido(enderecoProxBloco)) 
+    while (isEnderecoValido(enderecoProxBloco)) {
         enderecoBlocoAtual = enderecoProxBloco;
         enderecoProxBloco = disco[enderecoProxBloco].lbl.enderecoBlocoProx;
     }
