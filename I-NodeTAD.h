@@ -76,6 +76,8 @@ struct ListaBlocoLivre
 };
 typedef struct ListaBlocoLivre ListaBlocoLivre;
 
+
+/*
 struct Disco
 {
     int bad;
@@ -86,7 +88,19 @@ struct Disco
     ListaBlocoLivre lbl;
     LinkSimbolico ls;
 };
-typedef struct Disco Disco;
+typedef struct Disco Disco;*/
+
+
+struct Disco {
+    int bad;
+    int tipo; // 0 = livre, 1 = defeituoso, 2 = inode, 3 = arquivo
+
+    INode inode;
+    INodeIndireto inodeIndireto;
+    Diretorio diretorio;
+    ListaBlocoLivre lbl;
+    LinkSimbolico ls;
+};
 
 struct exibicaoEndereco
 {
@@ -141,7 +155,7 @@ string getNomeGrupo(int proprietarioCod)
 
     return nome;
 }
-
+/*
 void initDisco(Disco &disco)
 {
     disco.bad = 0;
@@ -150,6 +164,17 @@ void initDisco(Disco &disco)
     disco.inodeIndireto.TL = 0;
     disco.lbl.topo = -1;
     disco.ls.caminho[0] = '\0';
+}*/
+
+
+void initDisco(Disco &disco) {
+    disco.bad = 0;
+    disco.tipo = 0; // bloco começa como livre
+    disco.diretorio.TL = 0;
+    disco.inode.protecao[0] = '\0';
+    disco.inodeIndireto.TL = 0;
+    disco.lbl.topo = -1;
+    disco.ls.caminho = "";
 }
 
 void setDataHoraAtualSistema(char dataAtual[])
@@ -232,6 +257,9 @@ void pushListaBlocoLivre(Disco disco[], int endereco)
 
         disco[enderecoBlocoAtual + 1].lbl.endereco[++disco[enderecoBlocoAtual + 1].lbl.topo] = endereco;
     }
+    
+    
+     disco[endereco].tipo = 0; // Livre
 }
 
 int popListaBlocoLivre(Disco disco[])
@@ -307,6 +335,7 @@ void addExibicaoEndereco(exibicaoEndereco enderecos[], int &TL, int endereco, ch
 int criarINodeIndireto(Disco disco[])
 {
     int blocoLivreInodeIndireto = popListaBlocoLivre(disco);
+    disco[blocoLivreInodeIndireto].tipo = 2;
     for (int i = 0; i < MAX_INODEINDIRETO; i++)
     {
         setEnderecoNull(disco[blocoLivreInodeIndireto].inodeIndireto.endereco[i]);
