@@ -19,7 +19,7 @@ void inicializaSistemaBlocos(Disco disco[], int totalBlocos){
     for(int j=0; j<quantidadeBlocosNecessariosListaLivre; j++)
     {
         initDisco(disco[j]);
-        initListaBlocosLivre(disco[j].lbl);
+        initListaBlocosLivre(disco[j].lista_bloco_livre);
         
     }
 
@@ -48,7 +48,6 @@ void execucaoSistema(Disco disco[], int totalBlocos, int enderecoInodeRaiz){
     {		
         if (strcmp(comando.substr(0, 2).c_str(), "ls") == 0)
         {
-            // printf("\n");
             if (comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-li") == 0){
                 listaLinkDiretorioAtual(disco, enderecoInodeAtual);
             }
@@ -85,15 +84,6 @@ void execucaoSistema(Disco disco[], int totalBlocos, int enderecoInodeRaiz){
                     textcolor(WHITE);
                 }
             }
-            // char nomeDiretorio1[MAX_NOME_ARQUIVO];
-            // strcpy(nomeDiretorio1, "teste");
-            // for(int i=0; i < 140; i++){
-            //     itoa(i, nomeDiretorio, 10);
-            //     strcpy(nomeDiretorio, strcat(nomeDiretorio1, nomeDiretorio));                
-            //     addDiretorioEArquivo(disco, 'd', enderecoInodeAtual, nomeDiretorio);
-            //     nomeDiretorio[0] = '\0';
-            //     strcpy(nomeDiretorio1, "teste");
-            // }
         }
         else if (strcmp(comando.substr(0, 2).c_str(), "cd") == 0)
         {
@@ -185,16 +175,8 @@ void execucaoSistema(Disco disco[], int totalBlocos, int enderecoInodeRaiz){
             }
         }
         else if (strcmp(comando.substr(0, 5).c_str(), "chmod") == 0)
-        {
             if (comando.size() >= 7)
-            {
                 chmod(disco, enderecoInodeAtual, comando.substr(6));
-                // if(strcmp(comando.substr(6, 2).c_str(), "-s") == 0)
-                //     unlinkSimbolico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
-                // else if(strcmp(comando.substr(6, 2).c_str(), "-h") == 0)
-                //     unlinkFisico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
-            }
-        } 
         else if (strcmp(comando.c_str(), "trace disk") == 0)
         {
             printf("\n");
@@ -202,18 +184,16 @@ void execucaoSistema(Disco disco[], int totalBlocos, int enderecoInodeRaiz){
             printf("\n");
         }
         else if (strcmp(comando.c_str(), "clear") == 0)
-        {
             system("cls");
-        }
         else if (strcmp(comando.substr(0, 3).c_str(), "bad") == 0)
         {
             if (comando.size() >= 4)
             {
                 endereco = atoi(comando.substr(4).c_str());
                 if (endereco >= 0 && endereco < totalBlocos)
-                {
                     disco[endereco].bad = 1;
-                }else{
+                else
+                {
                     textcolor(RED);
                     printf("endereco invalido.\n");
                     textcolor(WHITE);
@@ -262,7 +242,7 @@ void inicializaSistema(Disco disco[], int totalBlocos)
     execucaoSistema(disco, totalBlocos, enderecoInodeRaiz);
 }
 
-int totalBlocos() {
+int TotalBlocos() {
 
     string texto;
 	int totalBlocos;
@@ -295,7 +275,7 @@ int main()
 {
     int totalBlocos;
     
-    totalBlocos = totalBlocos();
+    totalBlocos = TotalBlocos();
     
     printf("Quantidade de blocos selecionada: %d",totalBlocos);
     

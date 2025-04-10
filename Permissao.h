@@ -14,7 +14,6 @@ int permissaoToInt(char permissao[])
     return chmodCod;
 }
 void convertPermissaoToString(int permissao, char retorno[], int posicaoInicial=0){
-    // printf("%d %d %d\n", posicaoInicial, posicaoInicial+1, posicaoInicial+2);
     if (permissao - 4 >= 0)
     {
         retorno[posicaoInicial] = 'r';
