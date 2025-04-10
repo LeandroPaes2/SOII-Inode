@@ -58,4 +58,3 @@ string stringToLower(string palavra)
         palavra[i] = tolower(palavra[i]);
     return palavra;
 }
-
