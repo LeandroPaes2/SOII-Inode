@@ -8,13 +8,13 @@
 #include <math.h>
 #include <conio.h>
 
-#include "funcaoSecretaNaoOlha.h"
+#include "textColor.h"
 #include "I-NodeTAD.h"
 
 using namespace std;
 
-void inicializaSistemaBlocos(Disco disco[], int quantidadeBlocosTotais){
-    int quantidadeBlocosNecessariosListaLivre = quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
+void inicializaSistemaBlocos(Disco disco[], int totalBlocos){
+    int quantidadeBlocosNecessariosListaLivre = totalBlocos / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
     
     for(int j=0; j<quantidadeBlocosNecessariosListaLivre; j++)
     {
@@ -23,14 +23,14 @@ void inicializaSistemaBlocos(Disco disco[], int quantidadeBlocosTotais){
         
     }
 
-    for(int i = quantidadeBlocosNecessariosListaLivre; i < quantidadeBlocosTotais; i++) 
+    for(int i = quantidadeBlocosNecessariosListaLivre; i < totalBlocos; i++) 
     {
         initDisco(disco[i]);
         pushListaBlocoLivre(disco, i);
     }
 }
 
-void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInodeRaiz){
+void execucaoSistema(Disco disco[], int totalBlocos, int enderecoInodeRaiz){
     string caminhoAbsoluto;
     int endereco;
     string comando;
@@ -121,11 +121,11 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
         {
             int qtdBlocosLivres=0, qtdBlocosOcupados=0;
             float porcentagemBlocosUsados;
-            buscaBlocosLivresOcupados(disco, qtdBlocosLivres, qtdBlocosOcupados, quantidadeBlocosTotais, quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
+            buscaBlocosLivresOcupados(disco, qtdBlocosLivres, qtdBlocosOcupados, totalBlocos, totalBlocos / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
 
-            porcentagemBlocosUsados = (float) qtdBlocosOcupados/quantidadeBlocosTotais;
+            porcentagemBlocosUsados = (float) qtdBlocosOcupados/totalBlocos;
             printf("Filesystem\tTamanho\tUsados\tDisponivel\tUso%\t\tMontado em\n");
-            printf("/dev/sda1\t%d\t%d\t%d\t\t%.2f%%\t\t/\n", quantidadeBlocosTotais, qtdBlocosOcupados,qtdBlocosLivres, porcentagemBlocosUsados*100);
+            printf("/dev/sda1\t%d\t%d\t%d\t\t%.2f%%\t\t/\n", totalBlocos, qtdBlocosOcupados,qtdBlocosLivres, porcentagemBlocosUsados*100);
         }
         else if (strcmp(comando.substr(0, 2).c_str(), "vi") == 0)
         {
@@ -198,7 +198,7 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
         else if (strcmp(comando.c_str(), "trace disk") == 0)
         {
             printf("\n");
-            exibirDisco(disco, quantidadeBlocosTotais, quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
+            exibirDisco(disco, totalBlocos, totalBlocos / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
             printf("\n");
         }
         else if (strcmp(comando.c_str(), "clear") == 0)
@@ -210,7 +210,7 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
             if (comando.size() >= 4)
             {
                 endereco = atoi(comando.substr(4).c_str());
-                if (endereco >= 0 && endereco < quantidadeBlocosTotais)
+                if (endereco >= 0 && endereco < totalBlocos)
                 {
                     disco[endereco].bad = 1;
                 }else{
@@ -231,10 +231,10 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
         }
         else if (strcmp(comando.substr(0, 10).c_str(), "lost block") == 0)
         {   
-            int blocosPerdidos = quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
-            int blocosPerdidosBytes = getQuantidadeBlocosPerdidos(quantidadeBlocosTotais);            
+            int blocosPerdidos = totalBlocos / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
+            int blocosPerdidosBytes = getQuantidadeBlocosPerdidos(totalBlocos);            
 
-            printf("Foram perdidos %d (%d em Bytes) de %d blocos (%.2f%% de perca)\n", blocosPerdidos, blocosPerdidosBytes, quantidadeBlocosTotais, (float) blocosPerdidos/ (float)quantidadeBlocosTotais*100);
+            printf("Foram perdidos %d (%d em Bytes) de %d blocos (%.2f%% de perca)\n", blocosPerdidos, blocosPerdidosBytes, totalBlocos, (float) blocosPerdidos/ (float)totalBlocos*100);
         }
         else if (strcmp(comando.substr(0, 11).c_str(), "check files") == 0)
         {   
@@ -255,58 +255,52 @@ void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInod
     } while(strcmp(comando.c_str(), "exit") != 0);
 }
 
-void inicializaSistema(Disco disco[], int quantidadeBlocosTotais)
+void inicializaSistema(Disco disco[], int totalBlocos)
 {
-    inicializaSistemaBlocos(disco, quantidadeBlocosTotais);
+    inicializaSistemaBlocos(disco, totalBlocos);
     int enderecoInodeRaiz = criaDiretorioRaiz(disco);
-    execucaoSistema(disco, quantidadeBlocosTotais, enderecoInodeRaiz);
+    execucaoSistema(disco, totalBlocos, enderecoInodeRaiz);
 }
 
-int QuantidadeBlocosTotais() {
+int totalBlocos() {
 
-    string charQuantidadeBlocosTotais;
-	int quantidadeBlocosTotais;
+    string texto;
+	int totalBlocos;
     bool flag = 1;
 
     printf("Informe a Quantidade de blocos no disco desejada[ENTER p/ ignorar]:\n");
-    while(flag) {
+    while(flag) 
+    {
 
         fflush(stdin);
-        getline(cin, charQuantidadeBlocosTotais);
+        getline(cin, texto);
 
         flag = 0;
 
-        if(strcmp(charQuantidadeBlocosTotais.c_str(),"") == 0) {
-			quantidadeBlocosTotais = 1000;
-		} 
+        if(strcmp(texto.c_str(),"") == 0) 
+			totalBlocos = 1000;
 		else {
-			quantidadeBlocosTotais = atoi(charQuantidadeBlocosTotais.c_str()); 
-			if(quantidadeBlocosTotais <= 10) {
+			totalBlocos = atoi(texto.c_str()); 
+			if(totalBlocos <= 10) 
+            {
 				printf("A quantidade deve ser maior que 10!\n");
                 flag = 1;
 			}
 		}
     }
-	return quantidadeBlocosTotais;
+	return totalBlocos;
 }
 
 int main()
 {
-    int quantidadeBlocosTotais;
-    /*no início do sistema, deve ser informado pelo usuário a quantidade total de discos que haverá */
-    /*deve ser possível executar o comando ls -l*/
+    int totalBlocos;
     
-    iniciarAParada();
-    getch();
+    totalBlocos = totalBlocos();
     
-    system("cls");
+    printf("Quantidade de blocos selecionada: %d",totalBlocos);
     
-    quantidadeBlocosTotais = QuantidadeBlocosTotais();
-    
-    printf("Quantidade de blocos selecionada: %d",quantidadeBlocosTotais);
-    
-    Disco disco[quantidadeBlocosTotais];
-    inicializaSistema(disco, quantidadeBlocosTotais);
+    Disco disco[totalBlocos];
+    inicializaSistema(disco, totalBlocos);
     
     return 0;
 }

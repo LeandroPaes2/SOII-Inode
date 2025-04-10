@@ -5,39 +5,35 @@
 
 using namespace std;
 
-vector<string> split(string stringPrincipal, char delimitador = ' ')
+vector<string> split(string principal, char delimitador = ' ')
 {
-    istringstream stringStream(stringPrincipal);
-    string stringAuxiliar;
+    istringstream stringStream(principal);
+    string aux;
     vector<string> retorno;
 
-    while (getline(stringStream, stringAuxiliar, delimitador))
-    {
-        retorno.push_back(stringAuxiliar);
-    }
+    while (getline(stringStream, aux, delimitador))
+        retorno.push_back(aux);
 
     return retorno;
 }
 
-vector<string> splitPath(string stringPrincipal)
+vector<string> splitPath(string principal)
 {
-    vector<string> caminhoOrigem;
+    vector<string> origem;
 
-    if (!stringPrincipal.empty() && stringPrincipal.at(0) == '/') {
-        caminhoOrigem.push_back("/");
+    if (!principal.empty() && principal.at(0) == '/') 
+    {
+        origem.push_back("/");
 
-        vector<string> partes = split(stringPrincipal, '/');
+        vector<string> partes = split(principal, '/');
         for (size_t i = 0; i < partes.size(); i++) 
-        {
             if (partes[i] != "")
-                caminhoOrigem.push_back(partes[i]);
-        }
+                origem.push_back(partes[i]);
     }
-    else {
-        caminhoOrigem = split(stringPrincipal, '/');
-    }
+    else 
+        origem = split(principal, '/');
 
-    return caminhoOrigem;
+    return origem;
 }
 
 
@@ -46,23 +42,20 @@ string lastPosition(vector<string> vec)
     return vec.at(vec.size() - 1);
 }
 
-int ocorrenciaString(string conteudo, char caracterBuscado)
+int ocorrenciaString(string conteudo, char buscado)
 {
-    int qtd = 0;
+    int quantidade = 0;
     for (int i = 0; i < conteudo.size(); i++)
-    {
-        if (caracterBuscado == conteudo.at(i))
-            qtd++;
-    }
+        if (buscado == conteudo.at(i))
+            quantidade++;
 
-    return qtd;
+    return quantidade;
 }
 
 string stringToLower(string palavra)
 {
-    for (size_t i = 0; i < palavra.size(); i++) {
+    for (size_t i = 0; i < palavra.size(); i++) 
         palavra[i] = tolower(palavra[i]);
-    }
     return palavra;
 }
 
