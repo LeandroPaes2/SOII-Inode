@@ -8,7 +8,6 @@
 #include <math.h>
 #include <conio.h>
 
-#include "funcaoSecretaNaoOlha.h"
 #include "I-NodeTAD.h"
 
 using namespace std;
@@ -278,9 +277,7 @@ int QuantidadeBlocosTotais() {
 
 int main()
 {
-    int quantidadeBlocosTotais;
-
-    quantidadeBlocosTotais = QuantidadeBlocosTotais();
+    int quantidadeBlocosTotais = QuantidadeBlocosTotais();
     
     printf("Quantidade de blocos selecionada: %d",quantidadeBlocosTotais);
     
