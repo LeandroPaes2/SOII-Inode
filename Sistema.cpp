@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <iostream>
@@ -284,5 +284,327 @@ int main()
     Disco disco[quantidadeBlocosTotais];
     inicializaSistema(disco, quantidadeBlocosTotais);
     
+    return 0;
+}*/
+
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <iostream>
+#include <string>
+#include <time.h>
+#include <windows.h>
+#include <math.h>
+#include <conio.h>
+
+#include "I-NodeTAD.h"
+
+using namespace std;
+
+void inicializaSistemaBlocos(Disco disco[], int quantidadeBlocosTotais){
+    int quantidadeBlocosNecessariosListaLivre = quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
+
+    for(int j = 0; j < quantidadeBlocosNecessariosListaLivre; j++)
+    {
+        initDisco(disco[j]);
+        initListaBlocosLivre(disco[j].lbl);
+    }
+
+    for(int i = quantidadeBlocosNecessariosListaLivre; i < quantidadeBlocosTotais; i++) 
+    {
+        initDisco(disco[i]);
+        pushListaBlocoLivre(disco, i);
+    }
+}
+
+void exibirMapaBlocos(Disco disco[], int quantidadeBlocosTotais) {
+    printf("\nMapa de Blocos:\n");
+
+    for (int i = 0; i < quantidadeBlocosTotais; i++) {
+        char marcador;
+
+        if (disco[i].bad)
+            marcador = 'B';
+        else {
+            switch (disco[i].tipo) {
+                case 0: marcador = 'F'; break; // Livre
+                case 1: marcador = 'B'; break; // Defeituoso
+                case 2: marcador = 'I'; break; // INode
+                case 3: marcador = 'A'; break; // Arquivo
+                default: marcador = '?'; break;
+            }
+        }
+
+        printf("[%03d:%c] ", i, marcador);
+
+        if ((i + 1) % 10 == 0) printf("\n");
+    }
+
+    printf("\nLegenda: F = Livre | B = Defeituoso | I = INode | A = Arquivo\n\n");
+}
+
+
+void execucaoSistema(Disco disco[], int quantidadeBlocosTotais, int enderecoInodeRaiz){
+    string caminhoAbsoluto;
+    int endereco;
+    string comando;
+
+    comando.append("init");
+    
+    fflush(stdin);
+
+    int enderecoInodeAtual = enderecoInodeRaiz;
+    
+    caminhoAbsoluto.append("~");
+
+    printf("\n");
+    do
+    {		
+        if (comando == "map") {
+            exibirMapaBlocos(disco, quantidadeBlocosTotais);
+        }
+        else{
+        	
+        
+		if (strcmp(comando.substr(0, 2).c_str(), "ls") == 0)
+        {
+            if (comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-li") == 0){
+                listaLinkDiretorioAtual(disco, enderecoInodeAtual);
+            }
+            else if (comando.size() >= 5 && strcmp(comando.substr(3, 2).c_str(), "-l") == 0)
+            {
+                listarDiretorioComAtributos(disco, enderecoInodeAtual, strcmp(comando.substr(3).c_str(), "-la") == 0);
+            }
+            else if (comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-e") == 0){
+                listaDiretorioAtualIgualExplorer(disco, enderecoInodeAtual);
+            }
+            else
+            {
+                listarDiretorio(disco, enderecoInodeAtual, comando.size() >= 5 && strcmp(comando.substr(3).c_str(), "-a") == 0);
+            }
+
+            printf("\n");
+        }
+        else if (strcmp(comando.substr(0, 5).c_str(), "mkdir") == 0)
+        {
+            char comandoEnvio[comando.size() + 1];
+            
+            if (comando.size() >= 6)
+            {
+                strcpy(comandoEnvio, comando.substr(6).c_str()); 
+                
+                if (isEnderecoValido(mkdir(disco, enderecoInodeAtual, enderecoInodeRaiz, comandoEnvio)))
+                {
+                    printf("Diretorio criado\n");
+                }
+                else
+                {
+                    textcolor(RED);
+                    printf("Nao foi possivel criar o diretorio\n");
+                    textcolor(7);
+                }
+            }
+        }
+        else if (strcmp(comando.substr(0, 2).c_str(), "cd") == 0)
+        {
+            if (comando.size() >= 3)
+            {
+                enderecoInodeAtual = cd(disco, enderecoInodeAtual, comando.substr(3), enderecoInodeRaiz, caminhoAbsoluto);
+            }
+        }
+        else if (strcmp(comando.substr(0, 5).c_str(), "touch") == 0)
+        {
+            char touchString[comando.size()+1];
+            strcpy(touchString, comando.substr(6).c_str());
+
+            if (comando.size() > 6)
+                if(touch(disco, enderecoInodeAtual, enderecoInodeRaiz, touchString))
+                    printf("Arquivo criado\n");
+                else {
+                    textcolor(RED);
+                    printf("Nao foi possivel criar o arquivo\n");
+                    textcolor(7);
+                }
+                    
+        }
+        else if(strcmp(comando.substr(0, 2).c_str(), "df") == 0)
+        {
+            int qtdBlocosLivres=0, qtdBlocosOcupados=0;
+            float porcentagemBlocosUsados;
+            buscaBlocosLivresOcupados(disco, qtdBlocosLivres, qtdBlocosOcupados, quantidadeBlocosTotais, quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
+
+            porcentagemBlocosUsados = (float) qtdBlocosOcupados/quantidadeBlocosTotais;
+            printf("Filesystem\tTamanho\tUsados\tDisponivel\tUso%\t\tMontado em\n");
+            printf("/dev/sda1\t%d\t%d\t%d\t\t%.2f%%\t\t/\n", quantidadeBlocosTotais, qtdBlocosOcupados,qtdBlocosLivres, porcentagemBlocosUsados*100);
+        }
+        else if (strcmp(comando.substr(0, 2).c_str(), "vi") == 0)
+        {
+            if (comando.size() >= 3)
+            {
+                string enderecosUtilizados;
+                enderecosUtilizados.assign("");
+
+                vi(disco, enderecoInodeAtual, comando.substr(3), enderecosUtilizados);
+            }
+        }
+        else if (strcmp(comando.substr(0, 5).c_str(), "rmdir") == 0)
+        {
+            if (comando.size() >= 6)
+            {
+                int contadorDiretorio = 0;
+                if(rmdir(disco, enderecoInodeAtual, comando.substr(6), contadorDiretorio))
+                    printf("Diretorio removido\n");
+                else {
+                    textcolor(RED);
+                    printf("Nao foi possivel remover o diretorio\n");
+                    textcolor(7);
+                }
+            }
+        }
+        else if (strcmp(comando.substr(0, 2).c_str(), "rm") == 0)
+        {
+            if (comando.size() >= 3)
+            {
+                if(rm(disco, enderecoInodeAtual, comando.substr(3)))
+                    printf("Arquivo removido\n");
+                else {
+                    textcolor(RED);
+                    printf("Nao foi possivel remover o arquivo\n");
+                    textcolor(7);
+                }
+            }
+        }  
+        else if (strcmp(comando.substr(0, 4).c_str(), "link") == 0)
+        {
+            if (comando.size() >= 6)
+            {
+                if(strcmp(comando.substr(5, 2).c_str(), "-s") == 0)
+                    linkSimbolico(disco, enderecoInodeAtual, comando.substr(8), enderecoInodeRaiz);
+                else if(strcmp(comando.substr(5, 2).c_str(), "-h") == 0)
+                    linkFisico(disco, enderecoInodeAtual, comando.substr(8), enderecoInodeRaiz);
+            }
+        }   
+        else if (strcmp(comando.substr(0, 6).c_str(), "unlink") == 0)
+        {
+            if (comando.size() >= 6)
+            {
+                if(strcmp(comando.substr(7, 2).c_str(), "-s") == 0)
+                    unlinkSimbolico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
+                else if(strcmp(comando.substr(7, 2).c_str(), "-h") == 0)
+                    unlinkFisico(disco, enderecoInodeAtual, comando.substr(10), enderecoInodeRaiz);
+            }
+        }
+        else if (strcmp(comando.substr(0, 5).c_str(), "chmod") == 0)
+        {
+            if (comando.size() >= 7)
+            {
+                chmod(disco, enderecoInodeAtual, comando.substr(6));
+                }
+        } 
+        else if (strcmp(comando.c_str(), "trace disk") == 0)
+        {
+            printf("\n");
+            exibirDisco(disco, quantidadeBlocosTotais, quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE);
+            printf("\n");
+        }
+        else if (strcmp(comando.c_str(), "clear") == 0)
+        {
+            system("cls");
+        }
+        else if (strcmp(comando.substr(0, 3).c_str(), "bad") == 0)
+        {
+            if (comando.size() >= 4)
+            {
+                endereco = atoi(comando.substr(4).c_str());
+                if (endereco >= 0 && endereco < quantidadeBlocosTotais)
+                {
+                    disco[endereco].bad = 1;
+                }else{
+                    textcolor(RED);
+                    printf("endereco invalido.\n");
+                    textcolor(7);
+                }
+            }
+        }
+        else if (strcmp(comando.substr(0, 8).c_str(), "max file") == 0)
+        {
+            int quantidadeBlocosDisponiveis = getQuantidadeBlocosLivres(disco);
+            int quantidadeUtilizadas = 0;
+            int quantidadeRealUtilizada = 0;
+            getQuantidadeBlocosMaiorArquivo(disco, quantidadeBlocosDisponiveis, quantidadeUtilizadas, quantidadeRealUtilizada);
+
+            printf("Pode ser usado %d de %d blocos para inserir um arquivo(%.2f%% aproveitamento)\n", quantidadeRealUtilizada, quantidadeUtilizadas, (float) quantidadeRealUtilizada/ (float)quantidadeUtilizadas*100);
+        }
+        else if (strcmp(comando.substr(0, 10).c_str(), "lost block") == 0)
+        {   
+            int blocosPerdidos = quantidadeBlocosTotais / QUANTIDADE_LIMITE_ENDERECO_LISTA_BLOCO_LIVRE;
+            int blocosPerdidosBytes = getQuantidadeBlocosPerdidos(quantidadeBlocosTotais);            
+
+            printf("Foram perdidos %d (%d em Bytes) de %d blocos (%.2f%% de perca)\n", blocosPerdidos, blocosPerdidosBytes, quantidadeBlocosTotais, (float) blocosPerdidos/ (float)quantidadeBlocosTotais*100);
+        }
+        else if (strcmp(comando.substr(0, 11).c_str(), "check files") == 0)
+        {   
+            buscaBlocosIntegrosCorrompidos(disco, enderecoInodeAtual);
+            printf("\n");
+        }
+
+        textcolor(10);
+        printf("root@localhost");
+        textcolor(7);
+        printf(":");
+        textcolor(LIGHTBLUE);
+        printf("%s", caminhoAbsoluto.c_str());
+        textcolor(7);
+        printf("$ ");
+}
+		getline(cin, comando);
+    } while(strcmp(comando.c_str(), "exit") != 0);
+}
+
+
+void inicializaSistema(Disco disco[], int quantidadeBlocosTotais)
+{
+    inicializaSistemaBlocos(disco, quantidadeBlocosTotais);
+    int enderecoInodeRaiz = criaDiretorioRaiz(disco);
+    disco[enderecoInodeRaiz].tipo = 2; // inode
+    execucaoSistema(disco, quantidadeBlocosTotais, enderecoInodeRaiz);
+}
+
+int QuantidadeBlocosTotais() {
+    string entrada;
+    int quantidade = 0;
+    bool repetir = true;
+
+    printf("Informe a Quantidade de blocos no disco desejada:\n");
+    while (repetir) {
+        fflush(stdin);
+        getline(cin, entrada);
+
+        if (entrada.empty()) {
+            quantidade = 1000;
+            repetir = false;
+        } else {
+            quantidade = atoi(entrada.c_str());
+            if (quantidade <= 10) {
+                printf("A quantidade deve ser maior que 10!\n");
+            } else {
+                repetir = false;
+            }
+        }
+    }
+
+    return quantidade;
+}
+
+int main()
+{
+    int quantidadeBlocosTotais = QuantidadeBlocosTotais();
+    printf("Quantidade de blocos selecionada: %d\n", quantidadeBlocosTotais);
+
+    Disco disco[quantidadeBlocosTotais];
+    inicializaSistema(disco, quantidadeBlocosTotais);
+
     return 0;
 }
